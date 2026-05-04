@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Time Tracker</title>
+    <style>
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        /* UI Elementen */
+        .timer-display { font-size: 4rem; font-weight: bold; text-align: center; font-family: monospace; margin: 10px 0; color: var(--primary); }
+        .controls { display: flex; gap: 10px; justify-content: center; }
+        select, input, button { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 1rem; }
+        select { flex-grow: 1; }
+        
+        button { cursor: pointer; font-weight: 600; transition: opacity 0.2s; border: none; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-start { background: var(--success); color: white; min-width: 100px; }
+        .btn-stop { background: var(--danger); color: white; min-width: 100px; }
+        .btn-export { background: #64748b; color: white; margin-top: 10px; }
+
+        /* Tabel styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f1f5f9; }
+        .tag { background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>⏱️ Nieuwe Sessie</h2>
+        <div class="timer-display" id="display">00:00:00</div>
+        
+        <div class="controls">
+            <select id="projectSelect">
+                <option value="Algemeen">Project: Algemeen</option>
+                <option value="SAP BW Ontwikkeling">Project: SAP BW Ontwikkeling</option>
+                <option value="Admin & Mail">Project: Admin & Mail</option>
+                <option value="Meeting">Project: Meeting</option>
+            </select>
+            <button class="btn-start" id="startBtn">Start</button>
+            <button class="btn-stop" id="stopBtn" disabled>Stop</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>📊 Logboek</h2>
+            <button class="btn-export" onclick="exportToCSV()">Download CSV</button>
+        </div>
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Project</th>
+                    <th>Duur</th>
+                </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let startTime, elapsedTime = 0, timerInterval;
+    let logs = JSON.parse(localStorage.getItem('timelogs')) || [];
+
+    const display = document.getElementById('display');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const logBody = document.getElementById('logBody');
+    const projectSelect = document.getElementById('projectSelect');
+
+    function formatTime(ms) {
+        let h = Math.floor(ms / 3600000);
+        let m = Math.floor((ms % 3600000) / 60000);
+        let s = Math.floor((ms % 60000) / 1000);
+        return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    }
+
+    function updateTable() {
+        logBody.innerHTML = '';
+        logs.slice().reverse().forEach(entry => {
+            const row = `<tr>
+                <td>${entry.date}</td>
+                <td><span class="tag">${entry.project}</span></td>
+                <td>${entry.duration}</td>
+            </tr>`;
+            logBody.innerHTML += row;
+        });
+    }
+
+    startBtn.onclick = () => {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(() => {
+            elapsedTime = Date.now() - startTime;
+            display.innerText = formatTime(elapsedTime);
+        }, 1000);
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+    };
+
+    stopBtn.onclick = () => {
+        clearInterval(timerInterval);
+        const newEntry = {
+            date: new Date().toLocaleDateString('nl-NL'),
+            project: projectSelect.value,
+            duration: formatTime(elapsedTime),
+            rawMs: elapsedTime
+        };
+        
+        logs.push(newEntry);
+        localStorage.setItem('timelogs', JSON.stringify(logs));
+        
+        elapsedTime = 0;
+        display.innerText = "00:00:00";
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        updateTable();
+    };
+
+    function exportToCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,Datum,Project,Duur\n";
+        logs.forEach(row => {
+            csvContent += `${row.date},${row.project},${row.duration}\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "urenregistratie.csv");
+        document.body.appendChild(link);
+        link.click();
+    }
+
+    // Initial load
+    updateTable();
+</script>
+
+</body>
+</html>
