@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker - Monthly Filter</title>
+    <style>
+        :root { --primary: #2563eb; --secondary: #64748b; --danger: #dc2626; --warning: #f59e0b; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        h2 { margin-top: 0; color: #334155; font-size: 1.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--secondary); }
+        
+        select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 1rem; }
+        .row { display: flex; gap: 15px; }
+        .row > div { flex: 1; }
+        
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
+        .btn-add { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-update { background: var(--warning); color: white; margin-top: 10px; display: none; }
+        .btn-cancel { background: transparent; color: var(--secondary); margin-top: 5px; text-decoration: underline; font-size: 0.8rem; display: none; }
+        
+        .btn-export { background: var(--secondary); color: white; width: auto; font-size: 0.8rem; padding: 8px 15px; }
+
+        .filter-section { margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { font-size: 0.8rem; text-transform: uppercase; color: var(--secondary); }
+        tfoot { font-weight: bold; background: #f8fafc; }
+        .tag { background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500; }
+        
+        .actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .edit-btn { color: var(--primary); cursor: pointer; font-size: 1.1rem; }
+        .delete-btn { color: var(--danger); cursor: pointer; font-size: 1.1rem; }
+        
+        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .editing-highlight { border: 2px solid var(--warning) !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card" id="inputCard">
+        <h2 id="formTitle">📝 Add Hours</h2>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="dateInput">
+        </div>
+        
+        <div class="form-group">
+            <label>Project</label>
+            <select id="projectInput">
+                <option value="SAP BW Development">SAP BW Development</option>
+                <option value="Consultancy">Consultancy</option>
+                <option value="Admin & Mail">Admin & Mail</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Hours</label>
+                <input type="number" id="hoursInput" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Minutes</label>
+                <input type="number" id="minsInput" placeholder="0" min="0" max="59">
+            </div>
+        </div>
+
+        <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Logbook</button>
+        <button class="btn-update" id="updateBtn" onclick="updateEntry()">Update Entry</button>
+        <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel Edit</button>
+    </div>
+
+    <div class="card">
+        <div class="header-box">
+            <h2 style="border:none; padding:0; margin:0;">📊 Logbook</h2>
+            <button class="btn-export" onclick="exportCSV()">Download CSV</button>
+        </div>
+
+        <!-- FILTER SECTION -->
+        <div class="filter-section">
+            <label style="font-size: 0.75rem;">Filter by Month</label>
+            <select id="monthFilter" onchange="renderTable()">
+                <option value="all">Show All Months</option>
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+            </select>
+        </div>
+        
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Project</th>
+                    <th>Time</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">TOTAL (Filtered)</td>
+                    <td id="totalDisplay">0h 0m</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    let logs = JSON.parse(localStorage.getItem('my_time_tracker_v4')) || [];
+    let editIndex = null;
+
+    document.getElementById('dateInput').valueAsDate = new Date();
+
+    function renderTable() {
+        const body = document.getElementById('logBody');
+        const totalDisplay = document.getElementById('totalDisplay');
+        const filterVal = document.getElementById('monthFilter').value;
+        
+        body.innerHTML = '';
+        let totalMins = 0;
+        
+        // Sorting and Filtering
+        let displayLogs = [...logs].sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
+        
+        if (filterVal !== "all") {
+            displayLogs = displayLogs.filter(entry => {
+                const entryMonth = new Date(entry.dateRaw).getMonth();
+                return entryMonth == filterVal;
+            });
+        }
+
+        displayLogs.forEach((entry) => {
+            const actualIndex = logs.indexOf(entry);
+            totalMins += (entry.hours * 60) + entry.mins;
+            
+            const row = `<tr>
+                <td>${entry.dateDisplay}</td>
+                <td><span class="tag">${entry.project}</span></td>
+                <td>${entry.hours}h ${entry.mins}m</td>
+                <td class="actions">
+                    <span class="edit-btn" onclick="startEdit(${actualIndex})">✎</span>
+                    <span class="delete-btn" onclick="deleteEntry(${actualIndex})">×</span>
+                </td>
+            </tr>`;
+            body.innerHTML += row;
+        });
+
+        const finalHours = Math.floor(totalMins / 60);
+        const finalMins = totalMins % 60;
+        totalDisplay.innerText = `${finalHours}h ${finalMins}m`;
+    }
+
+    function addEntry() {
+        const dateRaw = document.getElementById('dateInput').value;
+        const project = document.getElementById('projectInput').value;
+        const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+        const mins = parseInt(document.getElementById('minsInput').value) || 0;
+
+        if (hours === 0 && mins === 0) return alert("Enter time.");
+        if (!dateRaw) return alert("Select date.");
+
+        const dateDisplay = new Date(dateRaw).toLocaleDateString('en-GB');
+
+        logs.push({ dateRaw, dateDisplay, project, hours, mins });
+        saveAndRefresh();
+        resetForm();
+    }
+
+    function startEdit(index) {
+        editIndex = index;
+        const entry = logs[index];
+
+        document.getElementById('dateInput').value = entry.dateRaw;
+        document.getElementById('projectInput').value = entry.project;
+        document.getElementById('hoursInput').value = entry.hours;
+        document.getElementById('minsInput').value = entry.mins;
+
+        document.getElementById('formTitle').innerText = "✏️ Edit Entry";
+        document.getElementById('addBtn').style.display = "none";
+        document.getElementById('updateBtn').style.display = "block";
+        document.getElementById('cancelBtn').style.display = "block";
+        document.getElementById('inputCard').classList.add('editing-highlight');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateEntry() {
+        if (editIndex === null) return;
+
+        logs[editIndex] = {
+            dateRaw: document.getElementById('dateInput').value,
+            dateDisplay: new Date(document.getElementById('dateInput').value).toLocaleDateString('en-GB'),
+            project: document.getElementById('projectInput').value,
+            hours: parseInt(document.getElementById('hoursInput').value) || 0,
+            mins: parseInt(document.getElementById('minsInput').value) || 0
+        };
+
+        saveAndRefresh();
+        resetForm();
+    }
+
+    function deleteEntry(index) {
+        if(confirm("Delete this entry?")) {
+            logs.splice(index, 1);
+            saveAndRefresh();
+        }
+    }
+
+    function resetForm() {
+        editIndex = null;
+        document.getElementById('dateInput').valueAsDate = new Date();
+        document.getElementById('hoursInput').value = '';
+        document.getElementById('minsInput').value = '';
+        document.getElementById('formTitle').innerText = "📝 Add Hours";
+        document.getElementById('addBtn').style.display = "block";
+        document.getElementById('updateBtn').style.display = "none";
+        document.getElementById('cancelBtn').style.display = "none";
+        document.getElementById('inputCard').classList.remove('editing-highlight');
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('my_time_tracker_v4', JSON.stringify(logs));
+        renderTable();
+    }
+
+    function exportCSV() {
+        if (logs.length === 0) return alert("No data.");
+        let csv = "Date,Project,Hours,Minutes\n";
+        logs.forEach(e => csv += `${e.dateDisplay},${e.project},${e.hours},${e.mins}\n`);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'time_log.csv';
+        a.click();
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
