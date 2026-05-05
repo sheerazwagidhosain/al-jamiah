@@ -3,25 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Tracker - Teacher Edition (Secured)</title>
+    <title>Al-Jamiah Time Tracker</title>
     <style>
-        :root { --primary: #2563eb; --secondary: #64748b; --danger: #dc2626; --warning: #f59e0b; --bg: #f1f5f9; }
+        :root { 
+            --primary: #00a3e0; /* Blauw uit logo */
+            --accent: #f9b233;  /* Oranje/Geel uit logo */
+            --secondary: #64748b; 
+            --danger: #dc2626; 
+            --warning: #f59e0b; 
+            --bg: #f1f5f9; 
+        }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid var(--primary); }
         
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .logo { max-width: 150px; height: auto; }
+
         /* Login Styles */
-        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; }
-        .pin-input { font-size: 2rem; width: 150px; text-align: center; letter-spacing: 0.5rem; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 8px; }
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
+        .pin-input { font-size: 2rem; width: 160px; text-align: center; letter-spacing: 0.5rem; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 8px; padding: 10px; }
         
-        /* Main Content (hidden by default) */
+        /* Main Content */
         #mainApp { display: none; }
 
-        h2 { margin-top: 0; color: #334155; font-size: 1.3rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        h2 { margin-top: 10px; color: #334155; font-size: 1.3rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-align: center; }
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--secondary); }
         
-        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 1rem; }
+        select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 1rem; }
         .row { display: flex; gap: 15px; }
         .row > div { flex: 1; }
         
@@ -29,18 +39,18 @@
         .btn-add { background: var(--primary); color: white; margin-top: 10px; }
         .btn-update { background: var(--warning); color: white; margin-top: 10px; display: none; }
         .btn-cancel { background: transparent; color: var(--secondary); margin-top: 5px; text-decoration: underline; font-size: 0.8rem; display: none; }
-        .btn-login { background: var(--primary); color: white; width: 150px; }
+        .btn-login { background: var(--accent); color: white; width: 160px; font-size: 1.1rem; }
         
         .filter-section { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
         .subtotals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .subtotal-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid var(--primary); }
+        .subtotal-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid var(--accent); }
         .subtotal-box b { display: block; color: var(--primary); font-size: 1rem; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
         th { font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); }
         tfoot { font-weight: bold; background: #f8fafc; }
-        .tag { background: #e2e8f0; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+        .tag { background: #e0f2fe; color: #0369a1; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .user-tag { color: var(--secondary); font-style: italic; font-size: 0.8rem; }
         .actions { display: flex; gap: 10px; justify-content: flex-end; }
         .edit-btn, .delete-btn { cursor: pointer; font-size: 1.2rem; }
@@ -49,17 +59,26 @@
 <body>
 
 <div class="container">
+    <!-- LOGIN SCREEN -->
     <div id="loginScreen">
-        <div class="card" style="text-align: center;">
-            <h2>🔐 Access Required</h2>
-            <p style="color: var(--secondary); font-size: 0.9rem;">Please enter your pin code</p>
-            <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••">
+        <div class="logo-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Al-Jamiah_Anwaaroel_Oeloom_Holland_logo.png" alt="Logo" class="logo">
+        </div>
+        <div class="card" style="text-align: center; width: 100%; max-width: 400px;">
+            <h2>🔐 Secure Access</h2>
+            <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 20px;">Enter PIN to manage hours</p>
+            <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
             <button class="btn-login" onclick="checkPin()">Login</button>
-            <p id="loginError" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px; display: none;">Incorrect PIN. Try again.</p>
+            <p id="loginError" style="color: var(--danger); font-size: 0.8rem; margin-top: 15px; display: none;">Invalid PIN. Please try again.</p>
         </div>
     </div>
 
+    <!-- MAIN APPLICATION -->
     <div id="mainApp">
+        <div class="logo-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Al-Jamiah_Anwaaroel_Oeloom_Holland_logo.png" alt="Logo" class="logo" style="max-width: 80px;">
+        </div>
+
         <div class="card" id="inputCard">
             <h2 id="formTitle">📝 Log Hours</h2>
             <div class="form-group">
@@ -135,12 +154,10 @@
 </div>
 
 <script>
-    // Configuration
-    const CORRECT_PIN = "1104";
-    let logs = JSON.parse(localStorage.getItem('my_time_tracker_v10')) || [];
+    const CORRECT_PIN = "1234";
+    let logs = JSON.parse(localStorage.getItem('aljamiah_tracker_v1')) || [];
     let editIndex = null;
 
-    // Login logic
     function checkPin() {
         const input = document.getElementById('pinInput').value;
         const errorMsg = document.getElementById('loginError');
@@ -154,7 +171,11 @@
         }
     }
 
-    // App logic
+    // Enter key to login
+    document.getElementById('pinInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkPin();
+    });
+
     document.getElementById('dateInput').valueAsDate = new Date();
 
     function renderTable() {
@@ -175,7 +196,7 @@
 
         displayLogs.forEach((entry) => {
             const actualIndex = logs.indexOf(entry);
-            const entryMins = (entry.hours * 60) + entry.mins;
+            const entryMins = (parseInt(entry.hours) * 60) + parseInt(entry.mins);
             totalMins += entryMins;
             projectMins[entry.project] = (projectMins[entry.project] || 0) + entryMins;
             
@@ -203,10 +224,10 @@
         const user = document.getElementById('userInput').value;
         const dateRaw = document.getElementById('dateInput').value;
         const project = document.getElementById('projectInput').value;
-        const hours = parseInt(document.getElementById('hoursInput').value) || 0;
-        const mins = parseInt(document.getElementById('minsInput').value) || 0;
+        const hours = document.getElementById('hoursInput').value || 0;
+        const mins = document.getElementById('minsInput').value || 0;
 
-        if ((hours === 0 && mins === 0) || !dateRaw) return;
+        if ((hours == 0 && mins == 0) || !dateRaw) return;
 
         const dateDisplay = new Date(dateRaw).toLocaleDateString('en-GB');
         logs.push({ user, dateRaw, dateDisplay, project, hours, mins });
@@ -226,7 +247,6 @@
         document.getElementById('addBtn').style.display = "none";
         document.getElementById('updateBtn').style.display = "block";
         document.getElementById('cancelBtn').style.display = "block";
-        document.getElementById('inputCard').classList.add('editing-highlight');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -237,15 +257,15 @@
             dateRaw: document.getElementById('dateInput').value,
             dateDisplay: new Date(document.getElementById('dateInput').value).toLocaleDateString('en-GB'),
             project: document.getElementById('projectInput').value,
-            hours: parseInt(document.getElementById('hoursInput').value) || 0,
-            mins: parseInt(document.getElementById('minsInput').value) || 0
+            hours: document.getElementById('hoursInput').value || 0,
+            mins: document.getElementById('minsInput').value || 0
         };
         saveAndRefresh();
         resetForm();
     }
 
     function deleteEntry(index) {
-        if(confirm("Delete this entry?")) {
+        if(confirm("Delete this record?")) {
             logs.splice(index, 1);
             saveAndRefresh();
         }
@@ -260,11 +280,10 @@
         document.getElementById('addBtn').style.display = "block";
         document.getElementById('updateBtn').style.display = "none";
         document.getElementById('cancelBtn').style.display = "none";
-        document.getElementById('inputCard').classList.remove('editing-highlight');
     }
 
     function saveAndRefresh() {
-        localStorage.setItem('my_time_tracker_v10', JSON.stringify(logs));
+        localStorage.setItem('aljamiah_tracker_v1', JSON.stringify(logs));
         renderTable();
     }
 </script>
