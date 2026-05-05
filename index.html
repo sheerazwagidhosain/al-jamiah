@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Tracker - Multi-User Support</title>
+    <title>Time Tracker - Teacher Edition (Secured)</title>
     <style>
         :root { --primary: #2563eb; --secondary: #64748b; --danger: #dc2626; --warning: #f59e0b; --bg: #f1f5f9; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
+        /* Login Styles */
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; }
+        .pin-input { font-size: 2rem; width: 150px; text-align: center; letter-spacing: 0.5rem; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 8px; }
+        
+        /* Main Content (hidden by default) */
+        #mainApp { display: none; }
+
         h2 { margin-top: 0; color: #334155; font-size: 1.3rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--secondary); }
@@ -22,9 +29,9 @@
         .btn-add { background: var(--primary); color: white; margin-top: 10px; }
         .btn-update { background: var(--warning); color: white; margin-top: 10px; display: none; }
         .btn-cancel { background: transparent; color: var(--secondary); margin-top: 5px; text-decoration: underline; font-size: 0.8rem; display: none; }
+        .btn-login { background: var(--primary); color: white; width: 150px; }
         
         .filter-section { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-        
         .subtotals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .subtotal-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid var(--primary); }
         .subtotal-box b { display: block; color: var(--primary); font-size: 1rem; }
@@ -35,104 +42,119 @@
         tfoot { font-weight: bold; background: #f8fafc; }
         .tag { background: #e2e8f0; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
         .user-tag { color: var(--secondary); font-style: italic; font-size: 0.8rem; }
-        
         .actions { display: flex; gap: 10px; justify-content: flex-end; }
-        .edit-btn { color: var(--primary); cursor: pointer; }
-        .delete-btn { color: var(--danger); cursor: pointer; }
-        
-        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .editing-highlight { border: 2px solid var(--warning) !important; }
+        .edit-btn, .delete-btn { cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="card" id="inputCard">
-        <h2 id="formTitle">📝 Add Hours</h2>
-        
-        <!-- USER SELECTION -->
-        <div class="form-group">
-            <label>Teacher</label>
-            <select id="userInput">
-                <option value="Employee 1">Employee 1</option>
-                <option value="Employee 2">Employee 2</option>
-                <option value="Consultant X">Consultant X</option>
-            </select>
+    <div id="loginScreen">
+        <div class="card" style="text-align: center;">
+            <h2>🔐 Access Required</h2>
+            <p style="color: var(--secondary); font-size: 0.9rem;">Please enter your pin code</p>
+            <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••">
+            <button class="btn-login" onclick="checkPin()">Login</button>
+            <p id="loginError" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px; display: none;">Incorrect PIN. Try again.</p>
         </div>
-
-        <div class="form-group">
-            <label>Date</label>
-            <input type="date" id="dateInput">
-        </div>
-        <div class="form-group">
-            <label>Book</label>
-            <select id="projectInput">
-                <option value="Book 1">Book 1</option>
-                <option value="Book 2">Book 2</option>
-                <option value="Book 3">Book 3</option>
-                <option value="Book 4">Book 4</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-        <div class="row">
-            <div class="form-group">
-                <label>Hours</label>
-                <input type="number" id="hoursInput" placeholder="0" min="0">
-            </div>
-            <div class="form-group">
-                <label>Minutes</label>
-                <input type="number" id="minsInput" placeholder="0" min="0" max="59">
-            </div>
-        </div>
-        <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Logbook</button>
-        <button class="btn-update" id="updateBtn" onclick="updateEntry()">Update Entry</button>
-        <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel Edit</button>
     </div>
 
-    <div class="card">
-        <div class="header-box">
-            <h2 style="border:none; padding:0; margin:0;">📊 Summary</h2>
-            <button class="btn-export" style="width:auto; padding:5px 10px; background:#64748b; color:white;" onclick="exportCSV()">CSV</button>
+    <div id="mainApp">
+        <div class="card" id="inputCard">
+            <h2 id="formTitle">📝 Log Hours</h2>
+            <div class="form-group">
+                <label>Teacher</label>
+                <select id="userInput">
+                    <option value="Teacher A">Teacher A</option>
+                    <option value="Teacher B">Teacher B</option>
+                    <option value="Teacher C">Teacher C</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="form-group">
+                <label>Book</label>
+                <select id="projectInput">
+                    <option value="English Literature">English Literature</option>
+                    <option value="Mathematics Vol 1">Mathematics Vol 1</option>
+                    <option value="History of Science">History of Science</option>
+                    <option value="Language Arts">Language Arts</option>
+                    <option value="Other / Admin">Other / Admin</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Hours</label>
+                    <input type="number" id="hoursInput" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Minutes</label>
+                    <input type="number" id="minsInput" placeholder="0" max="59">
+                </div>
+            </div>
+            <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Logbook</button>
+            <button class="btn-update" id="updateBtn" onclick="updateEntry()">Save Changes</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel</button>
         </div>
 
-        <div class="filter-section">
-            <label>Filter by Month</label>
-            <select id="monthFilter" onchange="renderTable()">
-                <option value="all">All Months</option>
-                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-            </select>
+        <div class="card">
+            <h2>📊 Overview</h2>
+            <div class="filter-section">
+                <label>Filter by Month</label>
+                <select id="monthFilter" onchange="renderTable()">
+                    <option value="all">All Months</option>
+                    <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                    <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                    <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                    <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                </select>
+            </div>
+            <div id="subtotals" class="subtotals-grid"></div>
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th>Date / Teacher</th>
+                        <th>Book</th>
+                        <th>Time</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="logBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2">TOTAL (Selected)</td>
+                        <td id="totalDisplay">0h 0m</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
-
-        <div id="subtotals" class="subtotals-grid"></div>
-        
-        <table id="logTable">
-            <thead>
-                <tr>
-                    <th>Date / User</th>
-                    <th>Project</th>
-                    <th>Time</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="logBody"></tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="2">GRAND TOTAL</td>
-                    <td id="totalDisplay">0h 0m</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
     </div>
 </div>
 
 <script>
-    let logs = JSON.parse(localStorage.getItem('my_time_tracker_v6')) || [];
+    // Configuration
+    const CORRECT_PIN = "1234";
+    let logs = JSON.parse(localStorage.getItem('my_time_tracker_v10')) || [];
     let editIndex = null;
 
+    // Login logic
+    function checkPin() {
+        const input = document.getElementById('pinInput').value;
+        const errorMsg = document.getElementById('loginError');
+        if (input === CORRECT_PIN) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            renderTable();
+        } else {
+            errorMsg.style.display = 'block';
+            document.getElementById('pinInput').value = '';
+        }
+    }
+
+    // App logic
     document.getElementById('dateInput').valueAsDate = new Date();
 
     function renderTable() {
@@ -147,7 +169,6 @@
         let projectMins = {};
         
         let displayLogs = [...logs].sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
-        
         if (filterVal !== "all") {
             displayLogs = displayLogs.filter(entry => new Date(entry.dateRaw).getMonth() == filterVal);
         }
@@ -158,11 +179,8 @@
             totalMins += entryMins;
             projectMins[entry.project] = (projectMins[entry.project] || 0) + entryMins;
             
-            const row = `<tr>
-                <td>
-                    <b>${entry.dateDisplay}</b><br>
-                    <span class="user-tag">${entry.user || 'Unknown'}</span>
-                </td>
+            body.innerHTML += `<tr>
+                <td><b>${entry.dateDisplay}</b><br><span class="user-tag">${entry.user}</span></td>
                 <td><span class="tag">${entry.project}</span></td>
                 <td>${entry.hours}h ${entry.mins}m</td>
                 <td class="actions">
@@ -170,7 +188,6 @@
                     <span class="delete-btn" onclick="deleteEntry(${actualIndex})">×</span>
                 </td>
             </tr>`;
-            body.innerHTML += row;
         });
 
         Object.keys(projectMins).forEach(proj => {
@@ -200,12 +217,11 @@
     function startEdit(index) {
         editIndex = index;
         const entry = logs[index];
-        document.getElementById('userInput').value = entry.user || "Employee 1";
+        document.getElementById('userInput').value = entry.user;
         document.getElementById('dateInput').value = entry.dateRaw;
         document.getElementById('projectInput').value = entry.project;
         document.getElementById('hoursInput').value = entry.hours;
         document.getElementById('minsInput').value = entry.mins;
-        
         document.getElementById('formTitle').innerText = "✏️ Edit Entry";
         document.getElementById('addBtn').style.display = "none";
         document.getElementById('updateBtn').style.display = "block";
@@ -240,7 +256,7 @@
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('hoursInput').value = '';
         document.getElementById('minsInput').value = '';
-        document.getElementById('formTitle').innerText = "📝 Add Hours";
+        document.getElementById('formTitle').innerText = "📝 Log Hours";
         document.getElementById('addBtn').style.display = "block";
         document.getElementById('updateBtn').style.display = "none";
         document.getElementById('cancelBtn').style.display = "none";
@@ -248,20 +264,9 @@
     }
 
     function saveAndRefresh() {
-        localStorage.setItem('my_time_tracker_v6', JSON.stringify(logs));
+        localStorage.setItem('my_time_tracker_v10', JSON.stringify(logs));
         renderTable();
     }
-
-    function exportCSV() {
-        let csv = "Name,Date,Project,Hours,Minutes\n";
-        logs.forEach(e => csv += `"${e.user}",${e.dateDisplay},"${e.project}",${e.hours},${e.mins}\n`);
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'time_log.csv'; a.click();
-    }
-
-    renderTable();
 </script>
 
 </body>
