@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Tracker - Teacher Edition</title>
+    <title>Time Tracker - Mufti Rashid Alim Misbahi</title>
     <style>
         :root { 
             --primary: #00a3e0; 
@@ -14,14 +14,18 @@
             --bg: #f1f5f9; 
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { max-width: 850px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid var(--primary); }
         
         /* Login Styles */
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
-        .pin-input { font-size: 2rem; width: 160px; text-align: center; letter-spacing: 0.5rem; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 8px; padding: 10px; }
+        .pin-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .pin-box { 
+            width: 50px; height: 60px; font-size: 2rem; text-align: center; 
+            border: 2px solid #cbd5e1; border-radius: 8px; background: white;
+        }
+        .pin-box:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(0,163,224,0.3); }
         
-        /* Main Content */
         #mainApp { display: none; }
 
         h2 { margin-top: 10px; color: #334155; font-size: 1.3rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-align: center; }
@@ -36,21 +40,23 @@
         .btn-add { background: var(--primary); color: white; margin-top: 10px; }
         .btn-update { background: var(--warning); color: white; margin-top: 10px; display: none; }
         .btn-cancel { background: transparent; color: var(--secondary); margin-top: 5px; text-decoration: underline; font-size: 0.8rem; display: none; }
-        .btn-login { background: var(--accent); color: white; width: 160px; font-size: 1.1rem; }
+        .btn-login { background: var(--accent); color: white; width: 100%; max-width: 230px; font-size: 1.1rem; }
         
-        .filter-section { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        /* Multi-Filter Section */
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        
         .subtotals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .subtotal-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid var(--accent); }
         .subtotal-box b { display: block; color: var(--primary); font-size: 1rem; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        th { font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); }
+        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
+        th { font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); white-space: nowrap; }
         tfoot { font-weight: bold; background: #f8fafc; }
         .tag { background: #e0f2fe; color: #0369a1; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .user-tag { color: var(--secondary); font-style: italic; font-size: 0.8rem; }
+        .class-tag { background: #fef3c7; color: #92400e; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .actions { display: flex; gap: 10px; justify-content: flex-end; }
-        .edit-btn, .delete-btn { cursor: pointer; font-size: 1.2rem; }
+        .edit-btn, .delete-btn { cursor: pointer; font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -60,7 +66,12 @@
         <div class="card" style="text-align: center; width: 100%; max-width: 400px;">
             <h2>🔐 Secure Access</h2>
             <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 20px;">Enter PIN to manage hours</p>
-            <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
+            <div class="pin-container">
+                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
+                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
+                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
+                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
+            </div>
             <button class="btn-login" onclick="checkPin()">Login</button>
             <p id="loginError" style="color: var(--danger); font-size: 0.8rem; margin-top: 15px; display: none;">Invalid PIN. Please try again.</p>
         </div>
@@ -71,24 +82,34 @@
             <h2 id="formTitle">📝 Log Hours</h2>
             <div class="form-group">
                 <label>Teacher</label>
-                <select id="userInput">
-                    <option value="Teacher A">Teacher A</option>
-                    <option value="Teacher B">Teacher B</option>
-                    <option value="Teacher C">Teacher C</option>
-                </select>
+                <input type="text" id="userInput" value="Mufti Rashid Alim Misbahi" readonly style="background: #f8fafc; color: #64748b; font-weight: 600;">
             </div>
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="dateInput">
             </div>
             <div class="form-group">
+                <label>Class / Group</label>
+                <select id="classInput">
+                    <option value="AO-10 (Ismail, Qari Riaz, Riaaz)">AO-10 (Ismail, Qari Riaz, Riaaz)</option>
+                    <option value="Maulana Ismaiel Jahangier">Maulana Ismaiel Jahangier</option>
+                    <option value="Maulana Ali Jahangier">Maulana Ali Jahangier</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Book</label>
                 <select id="projectInput">
-                    <option value="English Literature">English Literature</option>
-                    <option value="Mathematics Vol 1">Mathematics Vol 1</option>
-                    <option value="History of Science">History of Science</option>
-                    <option value="Language Arts">Language Arts</option>
-                    <option value="Other / Admin">Other / Admin</option>
+                    <option value="Sharh Aqaid">Sharh Aqaid</option>
+                    <option value="Al-Hidayah">Al-Hidayah</option>
+                    <option value="Al-Fawz Al-Kabeer">Al-Fawz Al-Kabeer</option>
+                    <option value="Al-Muntaqad">Al-Muntaqad</option>
+                    <option value="Noorul Anwaar">Noorul Anwaar</option>
+                    <option value="Quraan">Quraan</option>
+                    <option value="Nuzhatun Nazar">Nuzhatun Nazar</option>
+                    <option value="Al-Husami">Al-Husami</option>
+                    <option value="Tafseer Madarik al-Tanzeel">Tafseer Madarik al-Tanzeel</option>
+                    <option value="Sarf">Sarf</option>
+                    <option value="Nahw">Nahw</option>
                 </select>
             </div>
             <div class="row">
@@ -107,22 +128,54 @@
         </div>
 
         <div class="card">
-            <h2>📊 Overview</h2>
-            <div class="filter-section">
-                <label>Filter by Month</label>
-                <select id="monthFilter" onchange="renderTable()">
-                    <option value="all">All Months</option>
-                    <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-                    <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-                    <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-                    <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-                </select>
+            <h2>📊 Overview & Filters</h2>
+            
+            <div class="filter-grid">
+                <div>
+                    <label>Month</label>
+                    <select id="monthFilter" onchange="renderTable()">
+                        <option value="all">All Months</option>
+                        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Class</label>
+                    <select id="classFilter" onchange="renderTable()">
+                        <option value="all">All Classes</option>
+                        <option value="AO-10 (Ismail, Qari Riaz, Riaaz)">AO-10</option>
+                        <option value="Maulana Ismaiel Jahangier">M. Ismaiel</option>
+                        <option value="Maulana Ali Jahangier">M. Ali</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Book</label>
+                    <select id="bookFilter" onchange="renderTable()">
+                        <option value="all">All Books</option>
+                        <option value="Sharh Aqaid">Sharh Aqaid</option>
+                        <option value="Al-Hidayah">Al-Hidayah</option>
+                        <option value="Al-Fawz Al-Kabeer">Al-Fawz Al-Kabeer</option>
+                        <option value="Al-Muntaqad">Al-Muntaqad</option>
+                        <option value="Noorul Anwaar">Noorul Anwaar</option>
+                        <option value="Quraan">Quraan</option>
+                        <option value="Nuzhatun Nazar">Nuzhatun Nazar</option>
+                        <option value="Al-Husami">Al-Husami</option>
+                        <option value="Tafseer Madarik al-Tanzeel">Tafseer Madarik</option>
+                        <option value="Sarf">Sarf</option>
+                        <option value="Nahw">Nahw</option>
+                    </select>
+                </div>
             </div>
+
             <div id="subtotals" class="subtotals-grid"></div>
+            
             <table id="logTable">
                 <thead>
                     <tr>
-                        <th>Date / Teacher</th>
+                        <th>Date</th>
+                        <th>Class</th>
                         <th>Book</th>
                         <th>Time</th>
                         <th></th>
@@ -131,7 +184,7 @@
                 <tbody id="logBody"></tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="2">TOTAL (Selected)</td>
+                        <td colspan="3">TOTAL (Filtered)</td>
                         <td id="totalDisplay">0h 0m</td>
                         <td></td>
                     </tr>
@@ -143,26 +196,33 @@
 
 <script>
     const CORRECT_PIN = "1234";
-    let logs = JSON.parse(localStorage.getItem('aljamiah_tracker_v1')) || [];
+    let logs = JSON.parse(localStorage.getItem('aljamiah_tracker_v13')) || [];
     let editIndex = null;
 
+    // PIN Logic
+    const pinInputs = document.querySelectorAll('.pin-box');
+    pinInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            if (e.target.value.length === 1 && index < pinInputs.length - 1) pinInputs[index + 1].focus();
+            if (Array.from(pinInputs).every(inp => inp.value.length === 1)) checkPin();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) pinInputs[index - 1].focus();
+        });
+    });
+
     function checkPin() {
-        const input = document.getElementById('pinInput').value;
-        const errorMsg = document.getElementById('loginError');
-        if (input === CORRECT_PIN) {
+        const enteredPin = Array.from(pinInputs).map(inp => inp.value).join('');
+        if (enteredPin === CORRECT_PIN) {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             renderTable();
-        } else {
-            errorMsg.style.display = 'block';
-            document.getElementById('pinInput').value = '';
+        } else if (enteredPin.length === 4) {
+            document.getElementById('loginError').style.display = 'block';
+            pinInputs.forEach(inp => inp.value = '');
+            pinInputs[0].focus();
         }
     }
-
-    // Enter key to login
-    document.getElementById('pinInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') checkPin();
-    });
 
     document.getElementById('dateInput').valueAsDate = new Date();
 
@@ -170,7 +230,11 @@
         const body = document.getElementById('logBody');
         const totalDisplay = document.getElementById('totalDisplay');
         const subtotalsDiv = document.getElementById('subtotals');
-        const filterVal = document.getElementById('monthFilter').value;
+        
+        // Filter Values
+        const fMonth = document.getElementById('monthFilter').value;
+        const fClass = document.getElementById('classFilter').value;
+        const fBook = document.getElementById('bookFilter').value;
         
         body.innerHTML = '';
         subtotalsDiv.innerHTML = '';
@@ -178,18 +242,26 @@
         let projectMins = {};
         
         let displayLogs = [...logs].sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
-        if (filterVal !== "all") {
-            displayLogs = displayLogs.filter(entry => new Date(entry.dateRaw).getMonth() == filterVal);
-        }
+
+        // Apply Multi-Filter
+        displayLogs = displayLogs.filter(entry => {
+            const matchMonth = (fMonth === "all" || new Date(entry.dateRaw).getMonth() == fMonth);
+            const matchClass = (fClass === "all" || entry.className === fClass);
+            const matchBook  = (fBook === "all" || entry.project === fBook);
+            return matchMonth && matchClass && matchBook;
+        });
 
         displayLogs.forEach((entry) => {
             const actualIndex = logs.indexOf(entry);
             const entryMins = (parseInt(entry.hours) * 60) + parseInt(entry.mins);
             totalMins += entryMins;
+            
+            // Subtotals group by Book
             projectMins[entry.project] = (projectMins[entry.project] || 0) + entryMins;
             
             body.innerHTML += `<tr>
-                <td><b>${entry.dateDisplay}</b><br><span class="user-tag">${entry.user}</span></td>
+                <td><b>${entry.dateDisplay}</b></td>
+                <td><span class="class-tag">${entry.className}</span></td>
                 <td><span class="tag">${entry.project}</span></td>
                 <td>${entry.hours}h ${entry.mins}m</td>
                 <td class="actions">
@@ -209,8 +281,8 @@
     }
 
     function addEntry() {
-        const user = document.getElementById('userInput').value;
         const dateRaw = document.getElementById('dateInput').value;
+        const className = document.getElementById('classInput').value;
         const project = document.getElementById('projectInput').value;
         const hours = document.getElementById('hoursInput').value || 0;
         const mins = document.getElementById('minsInput').value || 0;
@@ -218,7 +290,10 @@
         if ((hours == 0 && mins == 0) || !dateRaw) return;
 
         const dateDisplay = new Date(dateRaw).toLocaleDateString('en-GB');
-        logs.push({ user, dateRaw, dateDisplay, project, hours, mins });
+        logs.push({ 
+            user: "Mufti Rashid Alim Misbahi", 
+            dateRaw, dateDisplay, className, project, hours, mins 
+        });
         saveAndRefresh();
         resetForm();
     }
@@ -226,8 +301,8 @@
     function startEdit(index) {
         editIndex = index;
         const entry = logs[index];
-        document.getElementById('userInput').value = entry.user;
         document.getElementById('dateInput').value = entry.dateRaw;
+        document.getElementById('classInput').value = entry.className;
         document.getElementById('projectInput').value = entry.project;
         document.getElementById('hoursInput').value = entry.hours;
         document.getElementById('minsInput').value = entry.mins;
@@ -241,9 +316,10 @@
     function updateEntry() {
         if (editIndex === null) return;
         logs[editIndex] = {
-            user: document.getElementById('userInput').value,
+            user: "Mufti Rashid Alim Misbahi",
             dateRaw: document.getElementById('dateInput').value,
             dateDisplay: new Date(document.getElementById('dateInput').value).toLocaleDateString('en-GB'),
+            className: document.getElementById('classInput').value,
             project: document.getElementById('projectInput').value,
             hours: document.getElementById('hoursInput').value || 0,
             mins: document.getElementById('minsInput').value || 0
@@ -271,7 +347,7 @@
     }
 
     function saveAndRefresh() {
-        localStorage.setItem('aljamiah_tracker_v1', JSON.stringify(logs));
+        localStorage.setItem('aljamiah_tracker_v13', JSON.stringify(logs));
         renderTable();
     }
 </script>
