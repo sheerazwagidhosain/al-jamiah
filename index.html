@@ -2,124 +2,191 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Tracker - Mufti Rashid Alim Misbahi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Time Tracker - Mobile Optimized</title>
     <style>
         :root { 
             --primary: #00a3e0; 
             --accent: #f9b233;  
             --secondary: #64748b; 
-            --danger: #dc2626; 
+            --danger: #ef4444; 
             --warning: #f59e0b; 
-            --bg: #f1f5f9; 
+            --bg: #f8fafc; 
+            --text: #1e293b;
         }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1e293b; padding: 20px; }
-        .container { max-width: 850px; margin: 0 auto; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid var(--primary); }
-        
-        /* Login */
-        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
-        .pin-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .pin-box { width: 50px; height: 60px; font-size: 2rem; text-align: center; border: 2px solid #cbd5e1; border-radius: 8px; }
-        
-        #mainApp { display: none; }
-        h2 { margin-top: 10px; color: #334155; font-size: 1.3rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-align: center; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--secondary); }
-        select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 1rem; }
-        .row { display: flex; gap: 15px; }
-        .row > div { flex: 1; }
-        
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
-        .btn-add { background: var(--primary); color: white; margin-top: 10px; }
-        .btn-update { background: var(--warning); color: white; margin-top: 10px; display: none; }
-        .btn-cancel { background: transparent; color: var(--secondary); margin-top: 5px; text-decoration: underline; display: none; }
-        .btn-login { background: var(--accent); color: white; max-width: 230px; }
-        
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .subtotals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        .subtotal-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid var(--accent); }
-        .subtotal-box b { display: block; color: var(--primary); font-size: 1rem; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
-        .tag { background: #e0f2fe; color: #0369a1; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .class-tag { background: #fef3c7; color: #92400e; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .actions { display: flex; gap: 10px; justify-content: flex-end; }
-        .edit-btn, .delete-btn { cursor: pointer; font-size: 1.1rem; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 15px;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; }
+
+        .card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            margin-bottom: 16px; 
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: #334155; display: flex; align-items: center; gap: 8px; }
+
+        /* Formulier styling */
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: var(--secondary); text-transform: uppercase; }
+        
+        select, input { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: 1px solid #cbd5e1; 
+            font-size: 16px; /* Voorkomt auto-zoom op iOS */
+            background: #fff;
+            appearance: none;
+        }
+
+        input:focus, select:focus { outline: none; border-color: var(--primary); ring: 2px var(--primary); }
+
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            transition: transform 0.1s; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:active { transform: scale(0.98); }
+        .btn-add { background: var(--primary); color: white; }
+        .btn-update { background: var(--warning); color: white; display: none; }
+        .btn-cancel { background: #f1f5f9; color: var(--secondary); margin-top: 8px; display: none; }
+
+        /* Mobile Table Transformation */
+        @media (max-width: 480px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tr { 
+                padding: 15px; 
+                border: 1px solid #e2e8f0; 
+                border-radius: 12px; 
+                margin-bottom: 12px; 
+                background: white;
+                position: relative;
+            }
+            td { border: none; padding: 4px 0; display: flex; justify-content: space-between; align-items: center; }
+            td:before { content: attr(data-label); font-weight: 700; color: var(--secondary); font-size: 0.8rem; }
+            .actions { margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 10px; justify-content: flex-end; }
+        }
+
+        .tag { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .class-tag { background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+
+        /* Login */
+        #loginScreen { min-height: 90vh; display: flex; align-items: center; justify-content: center; }
+        .pin-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .pin-box { width: 100%; height: 65px; border-radius: 12px; font-weight: bold; border: 2px solid #e2e8f0; }
+
+        /* Filters */
+        .filter-area { margin-bottom: 15px; }
+        
+        /* Stats */
+        .subtotal-box { 
+            background: #fff; border-left: 4px solid var(--accent); 
+            padding: 12px; border-radius: 10px; font-size: 0.85rem; 
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #e2e8f0; border-left-width: 4px; margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="loginScreen">
-        <div class="card" style="text-align: center; width: 100%; max-width: 400px;">
-            <h2>🔐 Secure Access</h2>
+        <div class="card" style="width: 100%; text-align: center;">
+            <h2>🔐 Login</h2>
+            <p style="font-size: 0.9rem; color: var(--secondary);">Voer pincode in</p>
             <div class="pin-container">
-                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
-                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
-                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
-                <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
+                <input type="tel" class="pin-box" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                <input type="tel" class="pin-box" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                <input type="tel" class="pin-box" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                <input type="tel" class="pin-box" maxlength="1" pattern="[0-9]*" inputmode="numeric">
             </div>
-            <button class="btn-login" onclick="checkPin()">Login</button>
-            <p id="loginError" style="color: var(--danger); display: none; margin-top: 10px;">Ongeldige PIN.</p>
+            <button class="btn-add" onclick="checkPin()">Toegang Verlenen</button>
+            <p id="loginError" style="color: var(--danger); display: none; font-weight: bold; margin-top: 15px;">❌ Onjuiste code</p>
         </div>
     </div>
 
-    <div id="mainApp">
+    <div id="mainApp" style="display:none;">
         <div class="card">
-            <h2 id="formTitle">📝 Log Hours</h2>
+            <h2 id="formTitle">✍️ Nieuwe Invoer</h2>
             <div class="form-group">
-                <label>Date</label>
+                <label>Datum</label>
                 <input type="date" id="dateInput">
             </div>
             <div class="form-group">
-                <label>Class</label>
+                <label>Klas</label>
                 <select id="classInput">
-                    <option value="AO-10 (Ismail, Qari Riaz, Riaaz)">AO-10 (Ismail, Qari Riaz, Riaaz)</option>
-                    <option value="Maulana Ismaiel Jahangier">Maulana Ismaiel Jahangier</option>
-                    <option value="Maulana Ali Jahangier">Maulana Ali Jahangier</option>
+                    <option value="AO-10">AO-10 (Ismail, Qari Riaz, Riaaz)</option>
+                    <option value="M. Ismaiel">Maulana Ismaiel Jahangier</option>
+                    <option value="M. Ali">Maulana Ali Jahangier</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Book</label>
+                <label>Boek</label>
                 <select id="projectInput">
                     <option value="Sharh Aqaid">Sharh Aqaid</option>
                     <option value="Al-Hidayah">Al-Hidayah</option>
-                    <option value="Al-Fawz Al-Kabeer">Al-Fawz Al-Kabeer</option>
-                    <option value="Al-Muntaqad">Al-Muntaqad</option>
-                    <option value="Noorul Anwaar">Noorul Anwaar</option>
                     <option value="Quraan">Quraan</option>
-                    <option value="Nuzhatun Nazar">Nuzhatun Nazar</option>
-                    <option value="Al-Husami">Al-Husami</option>
-                    <option value="Tafseer Madarik al-Tanzeel">Tafseer Madarik al-Tanzeel</option>
-                    <option value="Sarf">Sarf</option>
                     <option value="Nahw">Nahw</option>
+                    <option value="Sarf">Sarf</option>
                 </select>
             </div>
             <div class="row">
-                <div><label>Hours</label><input type="number" id="hoursInput" placeholder="0"></div>
-                <div><label>Minutes</label><input type="number" id="minsInput" placeholder="0"></div>
+                <div class="form-group">
+                    <label>Uren</label>
+                    <input type="number" id="hoursInput" inputmode="numeric" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Minuten</label>
+                    <input type="number" id="minsInput" inputmode="numeric" placeholder="0">
+                </div>
             </div>
-            <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Cloud</button>
-            <button class="btn-update" id="updateBtn" onclick="updateEntry()">Save Changes</button>
+            <button class="btn-add" id="addBtn" onclick="addEntry()">🚀 Opslaan in Cloud</button>
+            <button class="btn-update" id="updateBtn" onclick="updateEntry()">💾 Wijziging Opslaan</button>
             <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Annuleren</button>
         </div>
 
-        <div class="card">
-            <h2>📊 Overview</h2>
-            <div class="filter-grid">
-                <select id="monthFilter" onchange="renderTable()">
-                    <option value="all">All Months</option>
-                    <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-                    <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-                    <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-                    <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-                </select>
-            </div>
-            <div id="subtotals" class="subtotals-grid"></div>
-            <table>
-                <thead><tr><th>Date</th><th>Class</th><th>Book</th><th>Time</th><th></th></tr></thead>
+        <div class="filter-area">
+            <label>Filter op Maand</label>
+            <select id="monthFilter" onchange="renderTable()">
+                <option value="all">Alle Maanden</option>
+                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maart</option>
+                <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
+                <option value="6">Juli</option><option value="7">Augustus</option><option value="8">September</option>
+                <option value="9">Oktober</option><option value="10">November</option><option value="11">December</option>
+            </select>
+        </div>
+
+        <div id="subtotals"></div>
+
+        <div id="logContainer">
+            <table style="width: 100%;">
                 <tbody id="logBody"></tbody>
             </table>
         </div>
@@ -133,72 +200,70 @@
     let logs = [];
     let currentEditId = null;
 
-    // PIN Logic
-    const pinInputs = document.querySelectorAll('.pin-box');
-    pinInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            if (e.target.value.length === 1 && index < 3) pinInputs[index + 1].focus();
-            if (Array.from(pinInputs).every(i => i.value)) checkPin();
+    // PIN Focus
+    const inputs = document.querySelectorAll('.pin-box');
+    inputs.forEach((input, i) => {
+        input.addEventListener('input', () => {
+            if (input.value && i < 3) inputs[i+1].focus();
+            if (Array.from(inputs).every(inp => inp.value)) checkPin();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !input.value && i > 0) inputs[i-1].focus();
         });
     });
 
-    function checkPin() {
-        const pin = Array.from(pinInputs).map(i => i.value).join('');
+    async function checkPin() {
+        const pin = Array.from(inputs).map(i => i.value).join('');
         if (pin === CORRECT_PIN) {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             fetchLogsFromDB();
         } else {
             document.getElementById('loginError').style.display = 'block';
-            pinInputs.forEach(i => i.value = '');
-            pinInputs[0].focus();
+            inputs.forEach(i => i.value = '');
+            inputs[0].focus();
         }
     }
 
-    // DB: Ophalen
     async function fetchLogsFromDB() {
-        const resp = await fetch(`${SB_URL}/rest/v1/time_logs?select=*`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const data = await resp.json();
-        logs = data.map(d => ({
-            id: d.id,
-            dateRaw: d.date_raw,
-            dateDisplay: d.date_display,
-            className: d.class_name,
-            bookName: d.book_name,
-            hours: d.hours,
-            minutes: d.minutes
-        }));
-        renderTable();
+        try {
+            const r = await fetch(`${SB_URL}/rest/v1/time_logs?select=*`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            });
+            const data = await r.json();
+            logs = data.map(d => ({
+                id: d.id, dateRaw: d.date_raw, dateDisplay: d.date_display,
+                className: d.class_name, bookName: d.book_name, hours: d.hours, minutes: d.minutes
+            }));
+            renderTable();
+        } catch(e) { console.error(e); }
     }
 
-    // DB: Toevoegen
     async function addEntry() {
-        const dateVal = document.getElementById('dateInput').value;
+        const d = document.getElementById('dateInput').value;
+        if(!d) return alert("Selecteer een datum");
+        
         const entry = {
-            teacher: "Mufti Rashid Alim Misbahi",
-            date_raw: dateVal,
-            date_display: new Date(dateVal).toLocaleDateString('en-GB'),
+            teacher: "Mufti Rashid",
+            date_raw: d,
+            date_display: new Date(d).toLocaleDateString('nl-NL'),
             class_name: document.getElementById('classInput').value,
             book_name: document.getElementById('projectInput').value,
             hours: parseInt(document.getElementById('hoursInput').value) || 0,
             minutes: parseInt(document.getElementById('minsInput').value) || 0
         };
 
-        const resp = await fetch(`${SB_URL}/rest/v1/time_logs`, {
+        const r = await fetch(`${SB_URL}/rest/v1/time_logs`, {
             method: "POST",
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify(entry)
         });
 
-        if (resp.ok) { fetchLogsFromDB(); resetForm(); } 
-        else { const err = await resp.json(); alert("Fout: " + err.message); }
+        if(r.ok) { fetchLogsFromDB(); resetForm(); }
     }
 
-    // DB: Verwijderen
     async function deleteEntry(id) {
-        if (!confirm("Zeker weten?")) return;
+        if(!confirm("Verwijderen?")) return;
         await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${id}`, {
             method: "DELETE",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
@@ -206,81 +271,88 @@
         fetchLogsFromDB();
     }
 
-    // DB: Bewerken
     function startEdit(id) {
-        const entry = logs.find(l => l.id === id);
+        const l = logs.find(x => x.id === id);
         currentEditId = id;
-        document.getElementById('dateInput').value = entry.dateRaw;
-        document.getElementById('classInput').value = entry.className;
-        document.getElementById('projectInput').value = entry.bookName;
-        document.getElementById('hoursInput').value = entry.hours;
-        document.getElementById('minsInput').value = entry.minutes;
+        document.getElementById('dateInput').value = l.dateRaw;
+        document.getElementById('classInput').value = l.className;
+        document.getElementById('projectInput').value = l.bookName;
+        document.getElementById('hoursInput').value = l.hours;
+        document.getElementById('minsInput').value = l.minutes;
         
-        document.getElementById('addBtn').style.display = "none";
-        document.getElementById('updateBtn').style.display = "block";
-        document.getElementById('cancelBtn').style.display = "block";
-        document.getElementById('formTitle').innerText = "✏️ Edit Entry";
+        document.getElementById('addBtn').style.display = 'none';
+        document.getElementById('updateBtn').style.display = 'block';
+        document.getElementById('cancelBtn').style.display = 'block';
+        document.getElementById('formTitle').innerText = "✏️ Wijzigen";
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     async function updateEntry() {
-        const dateVal = document.getElementById('dateInput').value;
-        const updated = {
-            date_raw: dateVal,
-            date_display: new Date(dateVal).toLocaleDateString('en-GB'),
+        const d = document.getElementById('dateInput').value;
+        const up = {
+            date_raw: d, date_display: new Date(d).toLocaleDateString('nl-NL'),
             class_name: document.getElementById('classInput').value,
             book_name: document.getElementById('projectInput').value,
             hours: parseInt(document.getElementById('hoursInput').value) || 0,
             minutes: parseInt(document.getElementById('minsInput').value) || 0
         };
 
-        const resp = await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${currentEditId}`, {
+        const r = await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${currentEditId}`, {
             method: "PATCH",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify(updated)
+            body: JSON.stringify(up)
         });
-
-        if (resp.ok) { fetchLogsFromDB(); resetForm(); }
+        if(r.ok) { fetchLogsFromDB(); resetForm(); }
     }
 
     function renderTable() {
         const body = document.getElementById('logBody');
-        const subtotalsDiv = document.getElementById('subtotals');
+        const stats = document.getElementById('subtotals');
         const fMonth = document.getElementById('monthFilter').value;
         
         body.innerHTML = '';
-        subtotalsDiv.innerHTML = '';
-        let projMins = {};
+        stats.innerHTML = '';
+        let totalMins = 0;
+        let bookTotals = {};
 
         const filtered = logs.filter(l => fMonth === "all" || new Date(l.dateRaw).getMonth() == fMonth)
                             .sort((a,b) => new Date(b.dateRaw) - new Date(a.dateRaw));
 
         filtered.forEach(l => {
-            const mins = (l.hours * 60) + l.minutes;
-            projMins[l.bookName] = (projMins[l.bookName] || 0) + mins;
-            body.innerHTML += `<tr>
-                <td>${l.dateDisplay}</td>
-                <td><span class="class-tag">${l.className}</span></td>
-                <td><span class="tag">${l.bookName}</span></td>
-                <td>${l.hours}h ${l.minutes}m</td>
-                <td class="actions">
-                    <span class="edit-btn" onclick="startEdit(${l.id})">✎</span>
-                    <span class="delete-btn" onclick="deleteEntry(${l.id})">×</span>
-                </td>
-            </tr>`;
+            const m = (l.hours * 60) + l.minutes;
+            totalMins += m;
+            bookTotals[l.bookName] = (bookTotals[l.bookName] || 0) + m;
+
+            body.innerHTML += `
+                <tr class="mobile-row">
+                    <td data-label="Datum"><b>${l.dateDisplay}</b></td>
+                    <td data-label="Klas"><span class="class-tag">${l.className}</span></td>
+                    <td data-label="Boek"><span class="tag">${l.bookName}</span></td>
+                    <td data-label="Tijd">${l.hours}u ${l.minutes}m</td>
+                    <td class="actions">
+                        <button onclick="startEdit(${l.id})" style="width:auto; padding:8px 15px; background:#f1f5f9; color:var(--text); font-size:0.8rem;">✎ Edit</button>
+                        <button onclick="deleteEntry(${l.id})" style="width:auto; padding:8px 15px; background:#fee2e2; color:var(--danger); font-size:0.8rem; margin-left:8px;">× Wis</button>
+                    </td>
+                </tr>`;
         });
 
-        for (const [name, m] in Object.entries(projMins)) { /* Logic for subtotals boxes here */ }
+        for (const [book, mins] of Object.entries(bookTotals)) {
+            stats.innerHTML += `
+                <div class="subtotal-box">
+                    <span>${book}</span>
+                    <b>${Math.floor(mins/60)}u ${mins%60}m</b>
+                </div>`;
+        }
     }
 
     function resetForm() {
         currentEditId = null;
+        document.getElementById('addBtn').style.display = 'block';
+        document.getElementById('updateBtn').style.display = 'none';
+        document.getElementById('cancelBtn').style.display = 'none';
+        document.getElementById('formTitle').innerText = "✍️ Nieuwe Invoer";
+        document.querySelectorAll('input').forEach(i => i.value = '');
         document.getElementById('dateInput').valueAsDate = new Date();
-        document.getElementById('hoursInput').value = '';
-        document.getElementById('minsInput').value = '';
-        document.getElementById('addBtn').style.display = "block";
-        document.getElementById('updateBtn').style.display = "none";
-        document.getElementById('cancelBtn').style.display = "none";
-        document.getElementById('formTitle').innerText = "📝 Log Hours";
     }
 
     document.getElementById('dateInput').valueAsDate = new Date();
