@@ -244,26 +244,34 @@
     }
 
     // DATABASE: TOEVOEGEN
-    async function addEntry() {
-        const dateRaw = document.getElementById('dateInput').value;
-        const entry = {
-            teacher: "Mufti Rashid Alim Misbahi",
-            date_raw: dateRaw,
-            date_display: new Date(dateRaw).toLocaleDateString('en-GB'),
-            class_name: document.getElementById('classInput').value,
-            book_name: document.getElementById('projectInput').value,
-            hours: parseInt(document.getElementById('hoursInput').value) || 0,
-            minutes: parseInt(document.getElementById('minsInput').value) || 0
-        };
+async function addEntry() {
+    const dateRaw = document.getElementById('dateInput').value;
+    
+    // We maken het object aan ZONDER id veld
+    const entry = {
+        teacher: "Mufti Rashid Alim Misbahi",
+        date_raw: dateRaw,
+        date_display: new Date(dateRaw).toLocaleDateString('en-GB'),
+        class_name: document.getElementById('classInput').value,
+        book_name: document.getElementById('projectInput').value,
+        hours: parseInt(document.getElementById('hoursInput').value) || 0,
+        minutes: parseInt(document.getElementById('minsInput').value) || 0
+    };
 
-        if (!dateRaw || (entry.hours === 0 && entry.minutes === 0)) return;
+    // Validatie
+    if (!dateRaw || (entry.hours === 0 && entry.minutes === 0)) {
+        alert("Vul een datum en tijd in.");
+        return;
+    }
 
+    try {
         const response = await fetch(`${SB_URL}/rest/v1/time_logs`, {
             method: "POST",
             headers: { 
                 "apikey": SB_KEY, 
                 "Authorization": `Bearer ${SB_KEY}`, 
-                "Content-Type": "application/json" 
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal" 
             },
             body: JSON.stringify(entry)
         });
@@ -271,8 +279,15 @@
         if (response.ok) {
             await fetchLogsFromDB();
             resetForm();
+        } else {
+            const errorText = await response.text();
+            console.error("Supabase Error:", errorText);
+            alert("Fout van database: " + errorText);
         }
+    } catch (e) {
+        console.error("Netwerkfout:", e);
     }
+}
 
     // DATABASE: VERWIJDEREN
     async function deleteEntry(index) {
