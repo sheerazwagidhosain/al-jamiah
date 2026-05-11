@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Al-Jamiah Anwaaroel Oeloom Holland Time Tracker</title>
+    <title>Time Tracker - Teacher Edition</title>
     <style>
         :root { 
-            --primary: #00a3e0; /* Blauw uit logo */
-            --accent: #f9b233;  /* Oranje/Geel uit logo */
+            --primary: #00a3e0; 
+            --accent: #f9b233;  
             --secondary: #64748b; 
             --danger: #dc2626; 
             --warning: #f59e0b; 
@@ -17,9 +17,6 @@
         .container { max-width: 600px; margin: 0 auto; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid var(--primary); }
         
-        .logo-container { text-align: center; margin-bottom: 20px; }
-        .logo { max-width: 150px; height: auto; }
-
         /* Login Styles */
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
         .pin-input { font-size: 2rem; width: 160px; text-align: center; letter-spacing: 0.5rem; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 8px; padding: 10px; }
@@ -59,11 +56,7 @@
 <body>
 
 <div class="container">
-    <!-- LOGIN SCREEN -->
     <div id="loginScreen">
-        <div class="logo-container">
-            <img src="https://github.com/sheerazwagidhosain/al-jamiah/tree/main/logo.png" alt="Logo" class="logo">
-        </div>
         <div class="card" style="text-align: center; width: 100%; max-width: 400px;">
             <h2>🔐 Secure Access</h2>
             <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 20px;">Enter PIN to manage hours</p>
@@ -73,18 +66,15 @@
         </div>
     </div>
 
-    <!-- MAIN APPLICATION -->
     <div id="mainApp">
-        <div class="logo-container">
-            <img src="al-jamiah/logo.png" alt="Logo" class="logo" style="max-width: 80px;">
-        </div>
-
         <div class="card" id="inputCard">
             <h2 id="formTitle">📝 Log Hours</h2>
             <div class="form-group">
                 <label>Teacher</label>
                 <select id="userInput">
-                    <option value="Mufti Rashid Alim Misbahi">Mufti Rashid Alim Misbahi</option>
+                    <option value="Teacher A">Teacher A</option>
+                    <option value="Teacher B">Teacher B</option>
+                    <option value="Teacher C">Teacher C</option>
                 </select>
             </div>
             <div class="form-group">
@@ -237,54 +227,4 @@
         editIndex = index;
         const entry = logs[index];
         document.getElementById('userInput').value = entry.user;
-        document.getElementById('dateInput').value = entry.dateRaw;
-        document.getElementById('projectInput').value = entry.project;
-        document.getElementById('hoursInput').value = entry.hours;
-        document.getElementById('minsInput').value = entry.mins;
-        document.getElementById('formTitle').innerText = "✏️ Edit Entry";
-        document.getElementById('addBtn').style.display = "none";
-        document.getElementById('updateBtn').style.display = "block";
-        document.getElementById('cancelBtn').style.display = "block";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function updateEntry() {
-        if (editIndex === null) return;
-        logs[editIndex] = {
-            user: document.getElementById('userInput').value,
-            dateRaw: document.getElementById('dateInput').value,
-            dateDisplay: new Date(document.getElementById('dateInput').value).toLocaleDateString('en-GB'),
-            project: document.getElementById('projectInput').value,
-            hours: document.getElementById('hoursInput').value || 0,
-            mins: document.getElementById('minsInput').value || 0
-        };
-        saveAndRefresh();
-        resetForm();
-    }
-
-    function deleteEntry(index) {
-        if(confirm("Delete this record?")) {
-            logs.splice(index, 1);
-            saveAndRefresh();
-        }
-    }
-
-    function resetForm() {
-        editIndex = null;
-        document.getElementById('dateInput').valueAsDate = new Date();
-        document.getElementById('hoursInput').value = '';
-        document.getElementById('minsInput').value = '';
-        document.getElementById('formTitle').innerText = "📝 Log Hours";
-        document.getElementById('addBtn').style.display = "block";
-        document.getElementById('updateBtn').style.display = "none";
-        document.getElementById('cancelBtn').style.display = "none";
-    }
-
-    function saveAndRefresh() {
-        localStorage.setItem('aljamiah_tracker_v1', JSON.stringify(logs));
-        renderTable();
-    }
-</script>
-
-</body>
-</html>
+        document.getElementById('dateInput').value =
