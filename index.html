@@ -42,16 +42,14 @@
         .btn-cancel { background: transparent; color: var(--secondary); margin-top: 5px; text-decoration: underline; font-size: 0.8rem; display: none; }
         .btn-login { background: var(--accent); color: white; width: 100%; max-width: 230px; font-size: 1.1rem; }
         
-        /* Multi-Filter Section */
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-        
         .subtotals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .subtotal-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 0.85rem; border-left: 4px solid var(--accent); }
         .subtotal-box b { display: block; color: var(--primary); font-size: 1rem; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
-        th { font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); white-space: nowrap; }
+        th { font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); }
         tfoot { font-weight: bold; background: #f8fafc; }
         .tag { background: #e0f2fe; color: #0369a1; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .class-tag { background: #fef3c7; color: #92400e; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
@@ -65,7 +63,7 @@
     <div id="loginScreen">
         <div class="card" style="text-align: center; width: 100%; max-width: 400px;">
             <h2>🔐 Secure Access</h2>
-            <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 20px;">Enter PIN to manage hours</p>
+            <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 20px;">Enter PIN to manage cloud hours</p>
             <div class="pin-container">
                 <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
                 <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
@@ -122,14 +120,13 @@
                     <input type="number" id="minsInput" placeholder="0" max="59">
                 </div>
             </div>
-            <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Logbook</button>
+            <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Cloud Logbook</button>
             <button class="btn-update" id="updateBtn" onclick="updateEntry()">Save Changes</button>
             <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel</button>
         </div>
 
         <div class="card">
             <h2>📊 Overview & Filters</h2>
-            
             <div class="filter-grid">
                 <div>
                     <label>Month</label>
@@ -168,9 +165,7 @@
                     </select>
                 </div>
             </div>
-
             <div id="subtotals" class="subtotals-grid"></div>
-            
             <table id="logTable">
                 <thead>
                     <tr>
@@ -195,8 +190,12 @@
 </div>
 
 <script>
+    // --- SUPABASE CONFIGURATIE ---
+    const SB_URL = "HIER_JOUW_SUPABASE_URL_PLAKKEN";
+    const SB_KEY = "HIER_JOUW_SUPABASE_ANON_KEY_PLAKKEN";
+
     const CORRECT_PIN = "1234";
-    let logs = JSON.parse(localStorage.getItem('aljamiah_tracker_v13')) || [];
+    let logs = [];
     let editIndex = null;
 
     // PIN Logic
@@ -211,12 +210,12 @@
         });
     });
 
-    function checkPin() {
+    async function checkPin() {
         const enteredPin = Array.from(pinInputs).map(inp => inp.value).join('');
         if (enteredPin === CORRECT_PIN) {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            renderTable();
+            await fetchLogsFromDB(); // Haal data op bij succesvol inloggen
         } else if (enteredPin.length === 4) {
             document.getElementById('loginError').style.display = 'block';
             pinInputs.forEach(inp => inp.value = '');
@@ -224,14 +223,104 @@
         }
     }
 
-    document.getElementById('dateInput').valueAsDate = new Date();
+    // Database: Ophalen
+    async function fetchLogsFromDB() {
+        try {
+            const response = await fetch(`${SB_URL}/rest/v1/time_logs?select=*`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            });
+            const data = await response.json();
+            logs = data.map(d => ({
+                id: d.id,
+                dateRaw: d.date_raw || "",
+                dateDisplay: d.date_display,
+                className: d.class_name,
+                project: d.book_name,
+                hours: d.hours,
+                mins: d.minutes,
+                user: d.teacher
+            }));
+            renderTable();
+        } catch (e) { console.error("Fout bij ophalen:", e); }
+    }
+
+    // Database: Toevoegen
+    async function addEntry() {
+        const dateRaw = document.getElementById('dateInput').value;
+        const entry = {
+            teacher: "Mufti Rashid Alim Misbahi",
+            date_raw: dateRaw,
+            date_display: new Date(dateRaw).toLocaleDateString('en-GB'),
+            class_name: document.getElementById('classInput').value,
+            book_name: document.getElementById('projectInput').value,
+            hours: parseInt(document.getElementById('hoursInput').value) || 0,
+            minutes: parseInt(document.getElementById('minsInput').value) || 0
+        };
+
+        if ((entry.hours == 0 && entry.minutes == 0) || !dateRaw) return;
+
+        const response = await fetch(`${SB_URL}/rest/v1/time_logs`, {
+            method: "POST",
+            headers: { 
+                "apikey": SB_KEY, 
+                "Authorization": `Bearer ${SB_KEY}`, 
+                "Content-Type": "application/json" 
+            },
+            body: JSON.stringify(entry)
+        });
+
+        if (response.ok) {
+            await fetchLogsFromDB();
+            resetForm();
+        }
+    }
+
+    // Database: Verwijderen
+    async function deleteEntry(index) {
+        const entry = logs[index];
+        if(!confirm("Record uit de database verwijderen?")) return;
+
+        await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${entry.id}`, {
+            method: "DELETE",
+            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+        });
+        await fetchLogsFromDB();
+    }
+
+    // Database: Updaten
+    async function updateEntry() {
+        if (editIndex === null) return;
+        const entryId = logs[editIndex].id;
+        const dateRaw = document.getElementById('dateInput').value;
+
+        const updatedData = {
+            date_raw: dateRaw,
+            date_display: new Date(dateRaw).toLocaleDateString('en-GB'),
+            class_name: document.getElementById('classInput').value,
+            book_name: document.getElementById('projectInput').value,
+            hours: parseInt(document.getElementById('hoursInput').value) || 0,
+            minutes: parseInt(document.getElementById('minsInput').value) || 0
+        };
+
+        await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${entryId}`, {
+            method: "PATCH",
+            headers: { 
+                "apikey": SB_KEY, 
+                "Authorization": `Bearer ${SB_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(updatedData)
+        });
+
+        await fetchLogsFromDB();
+        resetForm();
+    }
 
     function renderTable() {
         const body = document.getElementById('logBody');
         const totalDisplay = document.getElementById('totalDisplay');
         const subtotalsDiv = document.getElementById('subtotals');
         
-        // Filter Values
         const fMonth = document.getElementById('monthFilter').value;
         const fClass = document.getElementById('classFilter').value;
         const fBook = document.getElementById('bookFilter').value;
@@ -243,20 +332,17 @@
         
         let displayLogs = [...logs].sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
 
-        // Apply Multi-Filter
         displayLogs = displayLogs.filter(entry => {
-            const matchMonth = (fMonth === "all" || new Date(entry.dateRaw).getMonth() == fMonth);
+            const matchMonth = (fMonth === "all" || (entry.dateRaw && new Date(entry.dateRaw).getMonth() == fMonth));
             const matchClass = (fClass === "all" || entry.className === fClass);
             const matchBook  = (fBook === "all" || entry.project === fBook);
             return matchMonth && matchClass && matchBook;
         });
 
-        displayLogs.forEach((entry) => {
+        displayLogs.forEach((entry, i) => {
             const actualIndex = logs.indexOf(entry);
             const entryMins = (parseInt(entry.hours) * 60) + parseInt(entry.mins);
             totalMins += entryMins;
-            
-            // Subtotals group by Book
             projectMins[entry.project] = (projectMins[entry.project] || 0) + entryMins;
             
             body.innerHTML += `<tr>
@@ -280,24 +366,6 @@
         totalDisplay.innerText = `${Math.floor(totalMins / 60)}h ${totalMins % 60}m`;
     }
 
-    function addEntry() {
-        const dateRaw = document.getElementById('dateInput').value;
-        const className = document.getElementById('classInput').value;
-        const project = document.getElementById('projectInput').value;
-        const hours = document.getElementById('hoursInput').value || 0;
-        const mins = document.getElementById('minsInput').value || 0;
-
-        if ((hours == 0 && mins == 0) || !dateRaw) return;
-
-        const dateDisplay = new Date(dateRaw).toLocaleDateString('en-GB');
-        logs.push({ 
-            user: "Mufti Rashid Alim Misbahi", 
-            dateRaw, dateDisplay, className, project, hours, mins 
-        });
-        saveAndRefresh();
-        resetForm();
-    }
-
     function startEdit(index) {
         editIndex = index;
         const entry = logs[index];
@@ -306,33 +374,11 @@
         document.getElementById('projectInput').value = entry.project;
         document.getElementById('hoursInput').value = entry.hours;
         document.getElementById('minsInput').value = entry.mins;
-        document.getElementById('formTitle').innerText = "✏️ Edit Entry";
+        document.getElementById('formTitle').innerText = "✏️ Edit Entry (Cloud)";
         document.getElementById('addBtn').style.display = "none";
         document.getElementById('updateBtn').style.display = "block";
         document.getElementById('cancelBtn').style.display = "block";
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function updateEntry() {
-        if (editIndex === null) return;
-        logs[editIndex] = {
-            user: "Mufti Rashid Alim Misbahi",
-            dateRaw: document.getElementById('dateInput').value,
-            dateDisplay: new Date(document.getElementById('dateInput').value).toLocaleDateString('en-GB'),
-            className: document.getElementById('classInput').value,
-            project: document.getElementById('projectInput').value,
-            hours: document.getElementById('hoursInput').value || 0,
-            mins: document.getElementById('minsInput').value || 0
-        };
-        saveAndRefresh();
-        resetForm();
-    }
-
-    function deleteEntry(index) {
-        if(confirm("Delete this record?")) {
-            logs.splice(index, 1);
-            saveAndRefresh();
-        }
     }
 
     function resetForm() {
@@ -346,10 +392,7 @@
         document.getElementById('cancelBtn').style.display = "none";
     }
 
-    function saveAndRefresh() {
-        localStorage.setItem('aljamiah_tracker_v13', JSON.stringify(logs));
-        renderTable();
-    }
+    document.getElementById('dateInput').valueAsDate = new Date();
 </script>
 
 </body>
