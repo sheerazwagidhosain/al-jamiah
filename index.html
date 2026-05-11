@@ -227,4 +227,54 @@
         editIndex = index;
         const entry = logs[index];
         document.getElementById('userInput').value = entry.user;
-        document.getElementById('dateInput').value =
+        document.getElementById('dateInput').value = entry.dateRaw;
+        document.getElementById('projectInput').value = entry.project;
+        document.getElementById('hoursInput').value = entry.hours;
+        document.getElementById('minsInput').value = entry.mins;
+        document.getElementById('formTitle').innerText = "✏️ Edit Entry";
+        document.getElementById('addBtn').style.display = "none";
+        document.getElementById('updateBtn').style.display = "block";
+        document.getElementById('cancelBtn').style.display = "block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateEntry() {
+        if (editIndex === null) return;
+        logs[editIndex] = {
+            user: document.getElementById('userInput').value,
+            dateRaw: document.getElementById('dateInput').value,
+            dateDisplay: new Date(document.getElementById('dateInput').value).toLocaleDateString('en-GB'),
+            project: document.getElementById('projectInput').value,
+            hours: document.getElementById('hoursInput').value || 0,
+            mins: document.getElementById('minsInput').value || 0
+        };
+        saveAndRefresh();
+        resetForm();
+    }
+
+    function deleteEntry(index) {
+        if(confirm("Delete this record?")) {
+            logs.splice(index, 1);
+            saveAndRefresh();
+        }
+    }
+
+    function resetForm() {
+        editIndex = null;
+        document.getElementById('dateInput').valueAsDate = new Date();
+        document.getElementById('hoursInput').value = '';
+        document.getElementById('minsInput').value = '';
+        document.getElementById('formTitle').innerText = "📝 Log Hours";
+        document.getElementById('addBtn').style.display = "block";
+        document.getElementById('updateBtn').style.display = "none";
+        document.getElementById('cancelBtn').style.display = "none";
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('aljamiah_tracker_v1', JSON.stringify(logs));
+        renderTable();
+    }
+</script>
+
+</body>
+</html>
