@@ -190,7 +190,6 @@
 </div>
 
 <script>
-    // --- SUPABASE CONFIGURATIE ---
     const SB_URL = "https://mbqaekezozemcrhzljcr.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1icWFla2V6b3plbWNyaHpsamNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NjQ0MzUsImV4cCI6MjA5NDA0MDQzNX0.WOZp3spdeLDmjebdKLbhlHAitGBCUt-kmf_9BE7b3iA";
     
@@ -198,66 +197,53 @@
     let logs = [];
     let editIndex = null;
 
-    // 1. PIN FOCUS LOGICA
+    // PIN LOGICA
     const pinInputs = document.querySelectorAll('.pin-box');
     pinInputs.forEach((input, index) => {
         input.addEventListener('input', (e) => {
-            if (e.target.value.length === 1 && index < pinInputs.length - 1) {
-                pinInputs[index + 1].focus();
-            }
+            if (e.target.value.length === 1 && index < pinInputs.length - 1) pinInputs[index + 1].focus();
             const enteredPin = Array.from(pinInputs).map(inp => inp.value).join('');
-            if (enteredPin.length === 4) {
-                checkPin();
-            }
+            if (enteredPin.length === 4) checkPin();
         });
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                pinInputs[index - 1].focus();
-            }
+            if (e.key === 'Backspace' && !e.target.value && index > 0) pinInputs[index - 1].focus();
         });
     });
 
-    // 2. INLOG FUNCTIE
     async function checkPin() {
         const enteredPin = Array.from(pinInputs).map(inp => inp.value).join('');
-        const errorMsg = document.getElementById('loginError');
-
         if (enteredPin === CORRECT_PIN) {
-            errorMsg.style.display = 'none';
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             await fetchLogsFromDB();
         } else if (enteredPin.length === 4) {
-            errorMsg.style.display = 'block';
+            document.getElementById('loginError').style.display = 'block';
             pinInputs.forEach(inp => inp.value = '');
             pinInputs[0].focus();
         }
     }
 
-    // 3. DATABASE: OPHALEN
-async function fetchLogsFromDB() {
-    try {
-        const response = await fetch(`${SB_URL}/rest/v1/time_logs?select=*`, {
-            headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-        });
-        const data = await response.json();
-        
-        // We slaan het 'id' uit de database nu op in onze lijst
-        logs = data.map(d => ({
-            id: d.id, 
-            dateRaw: d.date_raw || "",
-            dateDisplay: d.date_display,
-            className: d.class_name,
-            project: d.book_name,
-            hours: d.hours,
-            mins: d.minutes,
-            user: d.teacher
-        }));
-        renderTable();
-    } catch (e) { console.error("Fout bij ophalen:", e); }
-}
+    // DATABASE: OPHALEN
+    async function fetchLogsFromDB() {
+        try {
+            const response = await fetch(`${SB_URL}/rest/v1/time_logs?select=*`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            });
+            const data = await response.json();
+            logs = data.map(d => ({
+                id: d.id, // DATABASE ID OPSLAAN
+                dateRaw: d.date_raw,
+                dateDisplay: d.date_display,
+                className: d.class_name,
+                project: d.book_name,
+                hours: d.hours,
+                mins: d.minutes
+            }));
+            renderTable();
+        } catch (e) { console.error("Ophaalfout:", e); }
+    }
 
-    // 4. DATABASE: TOEVOEGEN
+    // DATABASE: TOEVOEGEN
     async function addEntry() {
         const dateRaw = document.getElementById('dateInput').value;
         const entry = {
@@ -270,7 +256,7 @@ async function fetchLogsFromDB() {
             minutes: parseInt(document.getElementById('minsInput').value) || 0
         };
 
-        if ((entry.hours == 0 && entry.minutes == 0) || !dateRaw) return;
+        if (!dateRaw || (entry.hours === 0 && entry.minutes === 0)) return;
 
         const response = await fetch(`${SB_URL}/rest/v1/time_logs`, {
             method: "POST",
@@ -288,22 +274,24 @@ async function fetchLogsFromDB() {
         }
     }
 
-    // 5. DATABASE: VERWIJDEREN
+    // DATABASE: VERWIJDEREN
     async function deleteEntry(index) {
         const entry = logs[index];
-        if(!confirm("Record uit de database verwijderen?")) return;
+        if (!entry || !entry.id) return alert("Geen ID gevonden.");
+        if (!confirm("Wil je dit record verwijderen?")) return;
 
-        await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${entry.id}`, {
+        const response = await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${entry.id}`, {
             method: "DELETE",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
         });
-        await fetchLogsFromDB();
+
+        if (response.ok) await fetchLogsFromDB();
     }
 
-    // 6. DATABASE: UPDATEN
+    // DATABASE: UPDATEN
     async function updateEntry() {
         if (editIndex === null) return;
-        const entryId = logs[editIndex].id;
+        const entry = logs[editIndex];
         const dateRaw = document.getElementById('dateInput').value;
 
         const updatedData = {
@@ -315,7 +303,7 @@ async function fetchLogsFromDB() {
             minutes: parseInt(document.getElementById('minsInput').value) || 0
         };
 
-        await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${entryId}`, {
+        const response = await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${entry.id}`, {
             method: "PATCH",
             headers: { 
                 "apikey": SB_KEY, 
@@ -325,45 +313,57 @@ async function fetchLogsFromDB() {
             body: JSON.stringify(updatedData)
         });
 
-        await fetchLogsFromDB();
-        resetForm();
+        if (response.ok) {
+            await fetchLogsFromDB();
+            resetForm();
+        }
     }
 
-    // 7. TABEL RENDERING
-function renderTable() {
-    const body = document.getElementById('logBody');
-    const totalDisplay = document.getElementById('totalDisplay');
-    const subtotalsDiv = document.getElementById('subtotals');
-    
-    body.innerHTML = '';
-    subtotalsDiv.innerHTML = '';
-    let totalMins = 0;
-    let projectMins = {};
-    
-    // Sorteren en filteren zoals voorheen
-    let displayLogs = [...logs].sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
-    // (Voeg hier eventueel je filter-logica weer tussen als je die gebruikt)
-
-    displayLogs.forEach((entry) => {
-        // We zoeken het ID op om te weten welke we moeten editen/deleten
-        const actualIndex = logs.findIndex(l => l.id === entry.id);
-        const entryMins = (parseInt(entry.hours) * 60) + parseInt(entry.mins);
-        totalMins += entryMins;
-        projectMins[entry.project] = (projectMins[entry.project] || 0) + entryMins;
+    // TABEL RENDERING
+    function renderTable() {
+        const body = document.getElementById('logBody');
+        const subtotalsDiv = document.getElementById('subtotals');
+        const totalDisplay = document.getElementById('totalDisplay');
         
-        body.innerHTML += `<tr>
-            <td><b>${entry.dateDisplay}</b></td>
-            <td><span class="class-tag">${entry.className}</span></td>
-            <td><span class="tag">${entry.project}</span></td>
-            <td>${entry.hours}h ${entry.mins}m</td>
-            <td class="actions">
-                <span class="edit-btn" onclick="startEdit(${actualIndex})">✎</span>
-                <span class="delete-btn" onclick="deleteEntry(${actualIndex})">×</span>
-            </td>
-        </tr>`;
-    });
-    // ... rest van de render functie (subtotals en totaal)
-}
+        const fMonth = document.getElementById('monthFilter').value;
+        const fClass = document.getElementById('classFilter').value;
+        const fBook = document.getElementById('bookFilter').value;
+        
+        body.innerHTML = '';
+        subtotalsDiv.innerHTML = '';
+        let totalMins = 0;
+        let projectMins = {};
+        
+        let filtered = logs.filter(entry => {
+            const matchMonth = fMonth === "all" || (new Date(entry.dateRaw).getMonth() == fMonth);
+            const matchClass = fClass === "all" || entry.className === fClass;
+            const matchBook  = fBook === "all" || entry.project === fBook;
+            return matchMonth && matchClass && matchBook;
+        }).sort((a, b) => new Date(b.dateRaw) - new Date(a.dateRaw));
+
+        filtered.forEach((entry) => {
+            const actualIndex = logs.findIndex(l => l.id === entry.id);
+            const mins = (entry.hours * 60) + entry.mins;
+            totalMins += mins;
+            projectMins[entry.project] = (projectMins[entry.project] || 0) + mins;
+            
+            body.innerHTML += `<tr>
+                <td><b>${entry.dateDisplay}</b></td>
+                <td><span class="class-tag">${entry.className}</span></td>
+                <td><span class="tag">${entry.project}</span></td>
+                <td>${entry.hours}h ${entry.mins}m</td>
+                <td class="actions">
+                    <span class="edit-btn" onclick="startEdit(${actualIndex})">✎</span>
+                    <span class="delete-btn" onclick="deleteEntry(${actualIndex})">×</span>
+                </td>
+            </tr>`;
+        });
+
+        Object.keys(projectMins).forEach(proj => {
+            subtotalsDiv.innerHTML += `<div class="subtotal-box">${proj}<b>${Math.floor(projectMins[proj]/60)}h ${projectMins[proj]%60}m</b></div>`;
+        });
+        totalDisplay.innerText = `${Math.floor(totalMins/60)}h ${totalMins%60}m`;
+    }
 
     function startEdit(index) {
         editIndex = index;
@@ -373,7 +373,7 @@ function renderTable() {
         document.getElementById('projectInput').value = entry.project;
         document.getElementById('hoursInput').value = entry.hours;
         document.getElementById('minsInput').value = entry.mins;
-        document.getElementById('formTitle').innerText = "✏️ Edit Entry (Cloud)";
+        document.getElementById('formTitle').innerText = "✏️ Edit Entry";
         document.getElementById('addBtn').style.display = "none";
         document.getElementById('updateBtn').style.display = "block";
         document.getElementById('cancelBtn').style.display = "block";
