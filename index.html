@@ -62,7 +62,7 @@
                 <input type="password" class="pin-box" maxlength="1" inputmode="numeric">
             </div>
             <button class="btn-login" onclick="checkPin()">Login</button>
-            <p id="loginError" style="color: var(--danger); display: none; margin-top: 10px;">Ongeldige PIN.</p>
+            <p id="loginError" style="color: var(--danger); display: none; margin-top: 10px;">Invalid PIN.</p>
         </div>
     </div>
 
@@ -102,9 +102,9 @@
                 <div><label>Hours</label><input type="number" id="hoursInput" placeholder="0"></div>
                 <div><label>Minutes</label><input type="number" id="minsInput" placeholder="0"></div>
             </div>
-            <button class="btn-add" id="addBtn" onclick="addEntry()">Add to Cloud</button>
+            <button class="btn-add" id="addBtn" onclick="addEntry()">Save to Cloud DB</button>
             <button class="btn-update" id="updateBtn" onclick="updateEntry()">Save Changes</button>
-            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Annuleren</button>
+            <button class="btn-cancel" id="cancelBtn" onclick="resetForm()">Cancel</button>
         </div>
 
         <div class="card">
@@ -199,7 +199,7 @@
 
     // DB: Verwijderen
     async function deleteEntry(id) {
-        if (!confirm("Zeker weten?")) return;
+        if (!confirm("Are you sure?")) return;
         await fetch(`${SB_URL}/rest/v1/time_logs?id=eq.${id}`, {
             method: "DELETE",
             headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
